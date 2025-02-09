@@ -1,0 +1,63 @@
+"use client";
+import ArrowIcon from "@/assets/arrow-right.svg";
+import heroVideo from "@/assets/hero-video.mp4"; // Import the video file
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
+
+export const Hero = () => {
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start end", "end start"],
+  });
+
+  const translateY = useTransform(scrollYProgress, [0, 1], [150, -150]);
+
+  return (
+    <section
+      ref={heroRef}
+      className="relative pt-8 pb-20 md:pt-5 md:pb-10 overflow-hidden"
+    >
+      {/* Video Background */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      >
+        <source src={heroVideo} type="video/mp4" /> {/* Use the imported video */}
+        Ваш браузер не поддерживает видео.
+      </video>
+
+      {/* Content Overlay */}
+      <div className="relative z-10 container text-white">
+        <div className="md:flex items-center">
+          <div className="md:w-[478px]">
+            <div className="text-sm inline-flex border border-white/10 px-3 py-1 rounded-lg tracking-tight">
+              Версия 2.0 уже здесь
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mt-6">
+              Путь к продуктивности
+            </h1>
+            <p className="text-xl tracking-tight mt-6">
+              Откройте радость достижений с приложением, которое поможет
+              отслеживать ваш прогресс, мотивировать усилия и праздновать успех.
+            </p>
+            <div className="flex gap-4 items-center mt-[30px]">
+              <button className="bg-white text-black px-4 py-2 rounded-lg font-medium">
+                Получить бесплатно
+              </button>
+              <button className="bg-transparent border border-white px-4 py-2 rounded-lg font-medium">
+                Узнать больше
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-0"></div>
+    </section>
+  );
+};
