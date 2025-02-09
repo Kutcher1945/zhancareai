@@ -77,13 +77,13 @@ export const Hero = () => {
       >
         <div className="py-4">
           <div className="container mx-auto flex items-center justify-between px-4">
-            <Image
-              src={Logo}
-              alt="Logo"
-              height={250}
-              width={250}
-              className="object-contain"
-            />
+          <Image
+            src={Logo}
+            alt="Logo"
+            height={250}
+            width={250}
+            className="bg-white p-0 rounded-lg"
+          />
             <button
               className="md:hidden text-white cursor-pointer"
               onClick={() => setIsMenuOpen(!isMenuOpen)}

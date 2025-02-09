@@ -20,12 +20,13 @@ export const Header = () => {
       <div className="py-5 bg-transparent"> {/* Transparent background */}
         <div className="container">
           <div className="flex items-center justify-between">
-            <Image
-              src={Logo}
-              alt="Логотип Ситуационного Центра"
-              height={60} // Adjusted height for logo
-              width={60} // Adjusted width for logo
-            />
+          <Image
+            src={Logo}
+            alt="Логотип Ситуационного Центра"
+            height={60} 
+            width={60}
+            className="bg-white p-2 rounded-lg"
+          />
             <MenuIcon className="h-5 w-5 md:hidden" />
             <nav className="hidden md:flex gap-6 text-white items-center"> {/* Text white for visibility */}
               <a href="#about">О проекте</a>

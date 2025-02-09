@@ -18,13 +18,16 @@ export const Footer = () => {
     <footer className="bg-gradient-to-br from-[#1D1D2F] to-[#1A1A2E] text-gray-400 text-sm py-10">
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
         {/* Logo Section */}
-        <div>
-          <Image src={logo} alt="Логотип компании" height={50} className="mx-auto md:mx-0" />
+        <div className="flex flex-col items-center md:items-start">
+          <div className="bg-white p-0 rounded-lg">
+            <Image src={logo} alt="Логотип компании" height={50} className="mx-auto md:mx-0" />
+          </div>
           <p className="mt-4 text-gray-400 leading-6">{translations.companyTagline}</p>
           <p className="mt-4 text-blue-400 font-semibold hover:underline cursor-pointer">
             <a href="#hero">{translations.learnMore}</a>
           </p>
         </div>
+
 
         {/* Navigation Links */}
         <nav>
