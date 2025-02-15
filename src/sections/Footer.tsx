@@ -19,8 +19,8 @@ export const Footer = () => {
       <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
         {/* Logo Section */}
         <div className="flex flex-col items-center md:items-start">
-          <div className="bg-white p-0 rounded-lg">
-            <Image src={logo} alt="Логотип компании" height={50} className="mx-auto md:mx-0" />
+          <div className="">
+            <Image src={logo} alt="Логотип компании" height={90} className="mx-auto md:mx-0" />
           </div>
           <p className="mt-4 text-gray-400 leading-6">{translations.companyTagline}</p>
           <p className="mt-4 text-blue-400 font-semibold hover:underline cursor-pointer">

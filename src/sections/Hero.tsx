@@ -80,9 +80,9 @@ export const Hero = () => {
           <Image
             src={Logo}
             alt="Logo"
-            height={250}
-            width={250}
-            className="bg-white p-0 rounded-lg"
+            height={300}
+            width={300}
+            // className="bg-white p-0 rounded-lg"
           />
             <button
               className="md:hidden text-white cursor-pointer"
