@@ -168,7 +168,7 @@
     },
 
     "chat": {
-      "title": "ZhanCare.AI-мен байланысыңыз",
+      "title": "ZhanBot.AI-мен байланысыңыз",
       "assistantInstruction": "Сіз виртуалды көмекшісіз...",
       "placeholder": "Маған сұрақ қойыңыз...",
       "sendButton": "Жіберу",
