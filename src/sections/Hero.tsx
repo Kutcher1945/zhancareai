@@ -52,7 +52,6 @@ export const Hero = () => {
     keyof typeof translations.navigation
   >;
 
-  
   return (
     <section className="relative pb-20 md:pb-10 overflow-hidden" id="hero">
       {/* Video Background */}
