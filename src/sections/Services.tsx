@@ -33,20 +33,20 @@ const iconMapping = {
 type IconName = keyof typeof iconMapping;
 
 interface Service {
-  icon: IconName; // Ensure icon matches the IconName type
+  icon: IconName;
   title: string;
   description: string;
   details: string[];
 }
 
 export const Services = () => {
-  const { language } = useLanguage(); // Get the current language from context
-  const translations = language === "ru" ? ru.services : kz.services; // Select the appropriate translations
+  const { language } = useLanguage();
+  const translations = language === "ru" ? ru.services : kz.services;
 
   // Explicitly type the list as an array of Service
   const services: Service[] = translations.list.map((service) => ({
     ...service,
-    icon: service.icon as IconName, // Ensure the icon matches the type
+    icon: service.icon as IconName,
   }));
 
   return (
@@ -67,15 +67,15 @@ export const Services = () => {
           {services.map((service, index) => (
             <motion.div
               key={index}
-              className="relative bg-white shadow-xl rounded-lg p-6 text-left group transition-all duration-300 hover:bg-blue-100"
+              className="relative bg-white shadow-xl rounded-lg p-6 text-left transition-all duration-300 group hover:bg-blue-100 cursor-pointer"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
+              {/* Icon & Title */}
               <div className="flex items-center mb-4">
                 <div className="p-5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-lg mr-4">
-                  {/* Safely map the icon */}
                   <FontAwesomeIcon
                     icon={iconMapping[service.icon]}
                     className="text-2xl"
@@ -89,14 +89,16 @@ export const Services = () => {
                 </div>
               </div>
 
-              {/* Animated Details */}
-              <ul className="list-disc pl-8 text-gray-800 bg-blue-200 p-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                {service.details.map((detail, i) => (
-                  <li key={i} className="text-gray-700 text-sm">
-                    {detail}
-                  </li>
-                ))}
-              </ul>
+              {/* Expandable Content (Appears on Hover) */}
+              <div className="overflow-hidden max-h-0 group-hover:max-h-[200px] group-hover:opacity-100 transition-all duration-500 ease-in-out">
+                <ul className="list-disc pl-8 text-gray-800 bg-white p-4 rounded-lg shadow-md">
+                  {service.details.map((detail, i) => (
+                    <li key={i} className="text-gray-700 text-sm">
+                      {detail}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </motion.div>
           ))}
         </div>
