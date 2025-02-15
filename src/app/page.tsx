@@ -7,6 +7,8 @@ import { Hero } from "@/sections/Hero";
 import Features from "@/sections/Features";
 import { Services } from "@/sections/Services";
 import { LogoTicker } from "@/sections/LogoTicker";
+import { Testimonials } from "@/sections/Testimonials"
+import { Pricing } from "@/sections/Pricing"
 import { ProductShowcase } from "@/sections/ProductShowcase";
 import { ChatButton } from "@/sections/ChatButton";
 import { ChatComponent } from "@/components/ChatComponent";
@@ -38,6 +40,9 @@ export default function Home() {
       <ProductShowcase />
       {/* Call To Action Section */}
       <CallToAction />
+
+      <Testimonials />
+      <Pricing />
       {/* Logo Ticker Section */}
       {/* <LogoTicker /> */}
       {/* Chat Button */}

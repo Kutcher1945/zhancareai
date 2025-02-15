@@ -53,7 +53,7 @@ export const Hero = () => {
   >;
 
   return (
-    <section className="relative min-h-screen overflow-hidden" id="hero">
+    <section className="relative pb-20 md:pb-10 overflow-hidden" id="hero">
       {/* Video Background */}
       <video
         autoPlay
@@ -67,7 +67,7 @@ export const Hero = () => {
       </video>
 
       {/* Darker Gradient Overlay */}
-      <div className="absolute inset-0 bg-black/80 -z-10"></div>
+      <div className="absolute inset-0 bg-black/50 md:bg-black/20 -z-10"></div>
 
       {/* Header */}
       <header
@@ -143,48 +143,49 @@ export const Hero = () => {
         </div>
       )}
 
-      {/* Hero Content */}
-      <div className="relative z-10 container mx-auto text-white px-4">
-        <motion.div
-          className="md:flex items-center"
-          initial="hidden"
-          animate="visible"
-          variants={textAnimation}
-        >
-          <div className="md:w-[50%] pt-20 pb-20">
-            <motion.h1
-              className="text-3xl md:text-5xl font-light tracking-tighter leading-tight mt-20"
-              initial="hidden"
-              animate="visible"
-              variants={textAnimation}
+      {/* Overlay */}
+  <div className="absolute inset-0 bg-black/80 md:bg-black/70 -z-10"></div>
+
+    {/* Hero Content */}
+    <div className="relative z-10 container mx-auto text-white px-4">
+      <motion.div
+        className="md:flex items-center"
+        initial="hidden"
+        animate="visible"
+        variants={textAnimation}
+      >
+        <div className="md:w-[50%] pt-20 pb-20">
+          <motion.h1
+            className="text-3xl md:text-5xl font-light tracking-tighter leading-tight mt-10 md:mt-20"
+            initial="hidden"
+            animate="visible"
+            variants={textAnimation}
+          >
+            {translations.content.heroHeading}
+          </motion.h1>
+          <motion.p
+            className="text-lg md:text-xl mt-4 md:mt-6 font-extralight leading-relaxed"
+            initial="hidden"
+            animate="visible"
+            variants={textAnimation}
+          >
+            {translations.content.heroDescription}
+          </motion.p>
+          <motion.div
+            className="flex gap-4 items-center mt-6 md:mt-8"
+            initial="hidden"
+            animate="visible"
+            variants={textAnimation}
+          >
+            <button
+              className="bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white px-6 py-3 rounded-lg font-medium hover:opacity-85 transition"
+              onClick={() => (window.location.href = "")}
             >
-              {translations.content.heroHeading}
-            </motion.h1>
-            <motion.p
-              className="text-lg md:text-xl mt-6 font-extralight leading-relaxed"
-              initial="hidden"
-              animate="visible"
-              variants={textAnimation}
-            >
-              {translations.content.heroDescription}
-            </motion.p>
-            <motion.div
-              className="flex gap-4 items-center mt-8"
-              initial="hidden"
-              animate="visible"
-              variants={textAnimation}
-            >
-              <button
-                className="bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white px-6 py-3 rounded-lg font-medium hover:opacity-85 transition"
-                onClick={() =>
-                  (window.location.href = "")
-                }
-              >
-                {translations.content.openDataButton}
-              </button>
-            </motion.div>
-          </div>
-        </motion.div>
+              {translations.content.openDataButton}
+            </button>
+          </motion.div>
+        </div>
+      </motion.div>
 
         {/* Statistics Section */}
         <motion.div
