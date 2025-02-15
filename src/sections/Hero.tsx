@@ -53,7 +53,7 @@ export const Hero = () => {
   >;
 
   return (
-    <section className="relative pb-20 md:pb-10 overflow-hidden" id="hero">
+    <section className="relative min-h-screen overflow-hidden" id="hero">
       {/* Video Background */}
       <video
         autoPlay
