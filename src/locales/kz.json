@@ -1,4 +1,19 @@
 {
+  
+    "auth": {
+      "welcome": "ZhanCare.AI-ге қош келдіңіз!",
+      "description": "Егер сізде аккаунт болса, жүйеге кіріңіз немесе бірнеше қадамда тіркеліңіз!",
+      "login": "Жүйеге кіру",
+      "register": "Тіркелу",
+      "email": "Электрондық пошта",
+      "password": "Құпия сөз",
+      "forgotPassword": "Құпия сөзді ұмыттыңыз ба?",
+      "loginButton": "Кіру",
+      "lastName": "Тегі",
+      "firstName": "Аты",
+      "confirmPassword": "Құпия сөзді растаңыз",
+      "registerButton": "Тіркелу"
+    },
     "hero": {
       "navigation": {
         "hero": "Басты бет",
@@ -177,7 +192,7 @@
       "fetchError": "Серверден жауап алу қателігі.",
       "genericError": "Қате орын алды. Қайталап көріңіз."
     },
-    
+
     "impactSection": {
       "title": "Неліктен ZhanCare.AI?",
       "description": "Біз денсаулық сақтауды жасанды интеллект көмегімен жетілдіреміз.",

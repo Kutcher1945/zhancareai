@@ -106,7 +106,7 @@ export const Hero = () => {
               >
                 {language === "ru" ? "Қазақша" : "Русский"}
               </button>
-              {/* <button onClick={() => setIsAuthOpen(true)} className="bg-gradient-to-r from-[#001E80]  to-[#3A50FF] text-white rounded-lg px-5 py-2">{language === "ru" ? "Войти" : "Кіру"}</button> */}
+              <button onClick={() => setIsAuthOpen(true)} className="bg-gradient-to-r from-[#001E80]  to-[#3A50FF] text-white rounded-lg px-5 py-2">{language === "ru" ? "Войти" : "Кіру"}</button>
               
             </nav>
           </div>
