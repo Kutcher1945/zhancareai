@@ -41,8 +41,8 @@ export default function Home() {
       {/* Call To Action Section */}
       <CallToAction />
 
-      <Testimonials />
-      <Pricing />
+      {/* <Testimonials /> */}
+      {/* <Pricing /> */}
       {/* Logo Ticker Section */}
       {/* <LogoTicker /> */}
       {/* Chat Button */}
