@@ -62,7 +62,7 @@ const Features = () => {
             {translations.description}
           </p>
           <a
-            href="https://opendata.smartalmaty.kz/"
+            href="https://www.zhan.care/"
             style={{
               backgroundColor: "#0d47a1",
               color: "white",
