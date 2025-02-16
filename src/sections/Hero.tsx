@@ -132,16 +132,26 @@ export const Hero = () => {
                 {translations.navigation[key]}
               </button>
             ))}
+            
+            {/* Language Switcher */}
             <button
               className="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition"
               onClick={() => setLanguage(language === "ru" ? "kz" : "ru")}
             >
               {language === "ru" ? "Қазақша" : "Русский"}
             </button>
-            {/* <button className="bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white px-4 py-2">{language === "ru" ? "Кіру" : "Войти"}</button> */}
+          
+            {/* Login Button for Mobile */}
+            <button
+              onClick={() => setIsAuthOpen(true)}
+              className="bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white rounded-lg px-6 py-3 font-medium"
+            >
+              {language === "ru" ? "Войти" : "Кіру"}
+            </button>
           </nav>
         </div>
       )}
+
 
       {/* Overlay */}
   <div className="absolute inset-0 bg-black/80 md:bg-black/70 -z-10"></div>
