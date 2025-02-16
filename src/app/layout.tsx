@@ -38,8 +38,10 @@ export const metadata: Metadata = {
     ],
     locale: "ru_RU",
     type: "website",
+    siteName: "ZhanCare.AI",
   },
 };
+
 
 export default function RootLayout({
   children,
@@ -60,6 +62,8 @@ export default function RootLayout({
         <meta property="og:image" content="/opengraph-zhancare.png" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://zhan.care/" />
+        <meta property="og:site_name" content="ZhanCare.AI" />
+
 
         {/* Twitter Card Meta Tags */}
         <meta name="twitter:card" content="summary_large_image" />
