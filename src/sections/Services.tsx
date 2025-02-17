@@ -64,32 +64,37 @@ export const Services = () => {
           {services.map((service, index) => (
             <div
               key={index}
-              className="relative bg-white shadow-xl rounded-lg p-6 text-left transition-all duration-300 group hover:bg-blue-100 cursor-pointer"
+              className="relative bg-white shadow-xl rounded-lg p-6 text-center transition-all duration-300 group cursor-pointer"
             >
-              <div className="flex items-center mb-4">
-                <div className="p-5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-lg mr-4">
-                  <FontAwesomeIcon
-                    icon={iconMapping[service.icon]}
-                    className="text-2xl"
-                  />
-                </div>
-                <div>
-                  <h5 className="text-xl font-bold text-gray-800">
-                    {service.title}
-                  </h5>
-                  <p className="text-gray-600">{service.description}</p>
-                </div>
-              </div>
-
-              {/* Expandable Content */}
-              <div className="overflow-hidden max-h-0 group-hover:max-h-[200px] group-hover:opacity-100 transition-all duration-500 ease-in-out">
-                <ul className="list-disc pl-8 text-gray-800 bg-white p-4 rounded-lg shadow-md">
+              {/* Overlay Element */}
+              <div
+                className="
+                  absolute inset-0 
+                  bg-[#1A1A2E] 
+                  transform scale-0 
+                  transition-transform duration-500 
+                  group-hover:scale-100 
+                  rounded-lg flex items-center justify-center
+                "
+              >
+                {/* Hover View: Centered Details List */}
+                <ul className="list-disc text-white text-lg space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   {service.details.map((detail, i) => (
-                    <li key={i} className="text-gray-700 text-sm">
-                      {detail}
-                    </li>
+                    <li key={i}>{detail}</li>
                   ))}
                 </ul>
+              </div>
+
+              {/* Content (placed above the overlay) */}
+              <div className="relative z-10">
+                {/* Default View: Icon, Title, Description */}
+                <div className="group-hover:hidden flex flex-col items-center">
+                  <div className="p-5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-lg mb-4">
+                    <FontAwesomeIcon icon={iconMapping[service.icon]} className="text-2xl" />
+                  </div>
+                  <h5 className="text-xl font-bold text-gray-800">{service.title}</h5>
+                  <p className="text-gray-600 mt-2">{service.description}</p>
+                </div>
               </div>
             </div>
           ))}
