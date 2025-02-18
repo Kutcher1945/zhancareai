@@ -64,23 +64,33 @@ export const Services = () => {
           {services.map((service, index) => (
             <div
               key={index}
-              className="relative bg-white shadow-xl rounded-lg p-6 text-center transition-all duration-300 group cursor-pointer"
+              className="
+                relative bg-white shadow-xl rounded-2xl p-6 text-center transition-all duration-500 
+                group cursor-pointer hover:scale-[1.05] hover:shadow-2xl
+              "
             >
-              {/* Overlay Element */}
+              {/* Animated Overlay with Gradient */}
               <div
                 className="
                   absolute inset-0 
-                  bg-[#1A1A2E] 
+                  bg-gradient-to-r from-[#001E80] to-[#3A50FF] 
                   transform scale-0 
-                  transition-transform duration-500 
-                  group-hover:scale-100 
-                  rounded-lg flex items-center justify-center
+                  opacity-0 transition-all duration-[800ms] ease-in-out
+                  group-hover:scale-100 group-hover:opacity-100 
+                  rounded-2xl flex flex-col items-center justify-center
+                  shadow-lg border border-[#ffffff]
                 "
               >
-                {/* Hover View: Centered Details List */}
-                <ul className="list-disc text-white text-lg space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                {/* Hover View: Centered Details List with Animated Items */}
+                <ul className="list-none text-white text-lg space-y-3 opacity-0 transition-opacity duration-[500ms] delay-300 group-hover:opacity-100">
                   {service.details.map((detail, i) => (
-                    <li key={i}>{detail}</li>
+                    <li 
+                      key={i} 
+                      className="opacity-0 transform translate-y-4 transition-all duration-500 ease-out delay-[100ms] group-hover:opacity-100 group-hover:translate-y-0"
+                      style={{ transitionDelay: `${i * 100 + 200}ms` }} // Staggered animation
+                    >
+                      - {detail}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -88,12 +98,18 @@ export const Services = () => {
               {/* Content (placed above the overlay) */}
               <div className="relative z-10">
                 {/* Default View: Icon, Title, Description */}
-                <div className="group-hover:hidden flex flex-col items-center">
+                <div
+                  className="
+                    flex flex-col items-center 
+                    transition-opacity duration-[600ms] ease-in-out
+                    group-hover:opacity-0 
+                  "
+                >
                   <div className="p-5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-lg mb-4">
                     <FontAwesomeIcon icon={iconMapping[service.icon]} className="text-2xl" />
                   </div>
-                  <h5 className="text-xl font-bold text-gray-800">{service.title}</h5>
-                  <p className="text-gray-600 mt-2">{service.description}</p>
+                  <h5 className="text-2xl font-semibold text-gray-900 tracking-wide">{service.title}</h5>
+                  <p className="text-gray-600 mt-2 text-md tracking-wide leading-relaxed">{service.description}</p>
                 </div>
               </div>
             </div>
