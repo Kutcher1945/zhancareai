@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css";  // ✅ Import Toast styles
 const dmSans = DM_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://your-production-domain.com"), // Add this line
   title: "ZhanCare.AI - Будущее телемедицины",
   description:
     "ZhanCare.AI — инновационная платформа для дистанционных медицинских консультаций, ИИ-инструментов для врачей и удобной связи между пациентами и докторами.",

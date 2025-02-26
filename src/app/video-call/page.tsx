@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import VideoCall from "@/components/video/VideoCall";
 
-const VideoCallPage: React.FC = () => {
+const VideoCallPageContent: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -19,6 +19,7 @@ const VideoCallPage: React.FC = () => {
     router.push("/profile"); // Redirect back to the profile page
   };
 
+  // ✅ Ensure we only render content if `meetingId` is available
   if (!meetingId) {
     return <div className="text-center text-red-500 mt-6">❌ Ошибка: Отсутствует идентификатор встречи!</div>;
   }
@@ -31,6 +32,14 @@ const VideoCallPage: React.FC = () => {
         <div className="text-center text-gray-600 mt-6">📞 Звонок завершен</div>
       )}
     </div>
+  );
+};
+
+const VideoCallPage: React.FC = () => {
+  return (
+    <Suspense fallback={<div className="text-center mt-6">🔄 Загрузка...</div>}>
+      <VideoCallPageContent />
+    </Suspense>
   );
 };
 
