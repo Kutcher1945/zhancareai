@@ -39,8 +39,8 @@ const AuthPopup = () => {
     setError("");
   
     const apiUrl = activeTab === "login"
-      ? "http://127.0.0.1:8000/api/v1/auth/login/"
-      : "http://127.0.0.1:8000/api/v1/auth/register/";
+      ? "https://zhancareai-back.vercel.app/api/v1/auth/login/"
+      : "https://zhancareai-back.vercel.app/api/v1/auth/register/";
   
     const payload = activeTab === "login"
       ? { email: formData.email, password: formData.password }

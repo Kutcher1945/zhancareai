@@ -20,7 +20,7 @@ const DoctorDashboard: React.FC = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://127.0.0.1:8000/api/v1/consultations/", {
+      const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/consultations/", {
         headers: { Authorization: `Token ${token}` },
       });
 
@@ -36,7 +36,7 @@ const DoctorDashboard: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `http://127.0.0.1:8000/api/v1/consultations/${consultationId}/accept/`,
+        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/accept/`,
         {},
         { headers: { Authorization: `Token ${token}` } }
       );
@@ -52,7 +52,7 @@ const DoctorDashboard: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `http://127.0.0.1:8000/api/v1/consultations/${consultationId}/reject/`,
+        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/reject/`,
         {},
         { headers: { Authorization: `Token ${token}` } }
       );

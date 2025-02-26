@@ -36,7 +36,7 @@ const VideoConsultation: React.FC = () => {
         return;
       }
 
-      const response = await axios.get("http://127.0.0.1:8000/api/v1/auth/doctor/available/", {
+      const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/auth/doctor/available/", {
         headers: { Authorization: `Token ${token}` },
       });
 
@@ -71,7 +71,7 @@ const VideoConsultation: React.FC = () => {
       }
   
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/v1/consultations/start/",
+        "https://zhancareai-back.vercel.app/api/v1/consultations/start/",
         { doctor_id: selectedDoctorId },
         {
           headers: { Authorization: `Token ${token}` },
@@ -101,7 +101,7 @@ const VideoConsultation: React.FC = () => {
     const interval = setInterval(async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/v1/consultations/status/?meeting_id=${meetingId}`,
+          `https://zhancareai-back.vercel.app/api/v1/consultations/status/?meeting_id=${meetingId}`,
           { headers: { Authorization: `Token ${token}` } }
         );
 
