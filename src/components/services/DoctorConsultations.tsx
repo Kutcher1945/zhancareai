@@ -15,6 +15,14 @@ const DoctorConsultations: React.FC = () => {
 
   useEffect(() => {
     fetchConsultations();
+
+    // ✅ Auto-fetch consultations every 30 seconds
+    const interval = setInterval(() => {
+      fetchConsultations();
+    }, 5000);
+
+    // Cleanup on unmount
+    return () => clearInterval(interval);
   }, []);
 
   const fetchConsultations = async () => {
