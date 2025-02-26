@@ -3,22 +3,33 @@ import heroVideo from "@/assets/hero-video.mp4"; // Import the video file
 import Logo from "@/assets/logosaas.png";
 import MenuIcon from "@/assets/menu.svg";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useAuth } from "@/context/AuthContext"
-import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import { faTimes, faUserMd, faSignOutAlt, faUser } from "@fortawesome/free-solid-svg-icons"; // ✅ Import faUserMd
 import { useLanguage } from "@/context/LanguageContext"; // Import Language Context
 import ru from "@/locales/ru.json";
 import kz from "@/locales/kz.json";
 import AuthPopup from '@/components/AuthPopup'
+import dynamic from "next/dynamic";
+import { toast, ToastContainer as ReactToastContainer } from "react-toastify";
+
+
+// Lazy load ToastContainer to avoid Next.js SSR issues
+const ToastContainer = dynamic(
+  () => import("react-toastify").then((mod) => mod.ToastContainer),
+  { ssr: false }
+)
 export const Hero = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
-  const { isAuthOpen, setIsAuthOpen } = useAuth(); 
+  const { isAuthOpen, setIsAuthOpen, user, logoutUser } = useAuth();  // ✅ Get user from AuthContext 
   const { language, setLanguage } = useLanguage(); // Get current language and toggle function
   const translations = language === "ru" ? ru.hero : kz.hero; // Use appropriate translations
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +40,14 @@ export const Hero = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  const handleLogout = () => {
+    logoutUser(); // Call the logout function from AuthContext
+    setIsDropdownOpen(false); // Close the dropdown after logout
+    toast.success("Вы успешно вышли!", { position: "top-right", autoClose: 3000 });
+  };  
+  
+  
 
   const handleScrollToSection = (id: string) => {
     const target = document.getElementById(id);
@@ -52,6 +71,19 @@ export const Hero = () => {
     keyof typeof translations.navigation
   >;
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  
+
   return (
     <section className="relative pb-20 md:pb-10 overflow-hidden" id="hero">
       {/* Video Background */}
@@ -70,44 +102,65 @@ export const Hero = () => {
       <div className="absolute inset-0 bg-black/50 md:bg-black/10 -z-9"></div>
 
       {/* Header */}
-      <header
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          isScrolled ? "bg-[#1D1D2F]/80 backdrop-blur-md" : "bg-transparent"
-        }`}
-      >
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? "bg-[#1D1D2F]/80 backdrop-blur-md" : "bg-transparent"}`}>
         <div className="py-4">
           <div className="container mx-auto flex items-center justify-between px-4">
-          <Image
-            src={Logo}
-            alt="Logo"
-            height={300}
-            width={300}
-            // className="bg-white p-0 rounded-lg"
-          />
-            <button
-              className="md:hidden text-white cursor-pointer"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
+            <Image src={Logo} alt="Logo" height={300} width={300} />
+
+            <button className="md:hidden text-white cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               <MenuIcon className="h-6 w-6" />
             </button>
+
             <nav className="hidden md:flex gap-6 text-white items-center">
-              {navigationKeys.map((key, index) => (
-                <button
-                  key={index}
-                  className="hover:text-gray-300 transition"
-                  onClick={() => handleScrollToSection(key)}
-                >
-                  {translations.navigation[key]}
-                </button>
-              ))}
+            {Object.keys(translations.navigation).map((key) => (
               <button
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium inline-flex items-center justify-center tracking-tight hover:bg-gray-700 transition"
-                onClick={() => setLanguage(language === "ru" ? "kz" : "ru")}
+                key={key}
+                className="hover:text-gray-300 transition"
+                onClick={() => handleScrollToSection(key)}
               >
+                {translations.navigation[key as keyof typeof translations.navigation]}  {/* ✅ FIX: Explicitly cast */}
+              </button>
+              ))}
+
+              {/* Language Switcher */}
+              <button className="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition" onClick={() => setLanguage(language === "ru" ? "kz" : "ru")}>
                 {language === "ru" ? "Қазақша" : "Русский"}
               </button>
-              <button onClick={() => setIsAuthOpen(true)} className="bg-gradient-to-r from-[#001E80]  to-[#3A50FF] text-white rounded-lg px-5 py-2">{language === "ru" ? "Войти" : "Кіру"}</button>
-              
+
+              {/* ✅ Show User Icon + First Name after login */}
+              {user ? (
+                user.first_name ? (
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      className="bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white rounded-lg px-5 py-2 flex items-center gap-2"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                      <FontAwesomeIcon icon={faUserMd} className="text-xl" />
+                      {user.first_name}
+                    </button>
+                
+                    {/* Dropdown Menu */}
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white text-black shadow-lg rounded-lg overflow-hidden">
+                        {/* Redirect to appropriate profile page */}
+                        <a href={user.role === "doctor" ? "/doctor-profile" : "/profile"} className="block px-4 py-3 hover:bg-gray-200 flex items-center gap-2 cursor-pointer">
+                          <FontAwesomeIcon icon={faUser} />
+                          Личный кабинет
+                        </a>
+                        <button onClick={handleLogout} className="block w-full text-left px-4 py-3 hover:bg-gray-200 flex items-center gap-2">
+                          <FontAwesomeIcon icon={faSignOutAlt} />
+                          Выйти
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : null
+              ) : (
+                <button onClick={() => setIsAuthOpen(true)} className="bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white rounded-lg px-5 py-2">
+                  {language === "ru" ? "Войти" : "Кіру"}
+                </button>
+              )}
+              <ToastContainer />
             </nav>
           </div>
         </div>
@@ -116,38 +169,35 @@ export const Hero = () => {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center text-white">
-          <button
-            className="absolute top-4 right-4 text-white cursor-pointer"
-            onClick={() => setIsMenuOpen(false)}
-          >
+          <button className="absolute top-4 right-4 text-white cursor-pointer" onClick={() => setIsMenuOpen(false)}>
             <FontAwesomeIcon icon={faTimes} className="text-2xl" />
           </button>
           <nav className="flex flex-col gap-8 text-center">
-            {navigationKeys.map((key, index) => (
+          {Object.keys(translations.navigation).map((key) => (
               <button
-                key={index}
-                className="text-xl font-semibold hover:text-gray-300"
+                key={key}
+                className="hover:text-gray-300 transition"
                 onClick={() => handleScrollToSection(key)}
               >
-                {translations.navigation[key]}
+                {translations.navigation[key as keyof typeof translations.navigation]}  {/* ✅ FIX: Explicitly cast */}
               </button>
-            ))}
-            
+              ))}
+
             {/* Language Switcher */}
-            <button
-              className="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition"
-              onClick={() => setLanguage(language === "ru" ? "kz" : "ru")}
-            >
+            <button className="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition" onClick={() => setLanguage(language === "ru" ? "kz" : "ru")}>
               {language === "ru" ? "Қазақша" : "Русский"}
             </button>
-          
-            {/* Login Button for Mobile */}
-            <button
-              onClick={() => setIsAuthOpen(true)}
-              className="bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white rounded-lg px-6 py-3 font-medium"
-            >
-              {language === "ru" ? "Войти" : "Кіру"}
-            </button>
+
+            {/* ✅ Mobile User Icon + First Name after login */}
+            {user ? (
+              <button className="bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white rounded-lg px-6 py-3 font-medium flex items-center gap-2">
+                <FontAwesomeIcon icon={faUserMd} className="text-xl" /> {user.first_name}
+              </button>
+            ) : (
+              <button onClick={() => setIsAuthOpen(true)} className="bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white rounded-lg px-6 py-3 font-medium">
+                {language === "ru" ? "Войти" : "Кіру"}
+              </button>
+            )}
           </nav>
         </div>
       )}

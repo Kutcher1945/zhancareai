@@ -6,6 +6,8 @@ import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext"; 
 import { AuthProvider } from "@/context/AuthContext"; 
 import AuthPopup from "@/components/AuthPopup"; 
+import { ToastContainer } from "react-toastify";  // ✅ Import Toastify
+import "react-toastify/dist/ReactToastify.css";  // ✅ Import Toast styles
 
 const dmSans = DM_Sans({ subsets: ["latin"] });
 
@@ -43,7 +45,6 @@ export const metadata: Metadata = {
   },
 };
 
-
 export default function RootLayout({
   children,
 }: {
@@ -65,28 +66,6 @@ export default function RootLayout({
             gtag('config', 'G-2ZF4XS6G3Y');
           `}
         </Script>
-        {/* Default Meta Tags for SEO */}
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="robots" content="index, follow" />
-        <meta name="author" content="ZhanCare.AI Team" />
-
-        {/* Open Graph Meta Tags */}
-        <meta property="og:title" content="ZhanCare.AI - Будущее телемедицины" />
-        <meta property="og:description" content="ZhanCare.AI предоставляет современные технологии для медицинской помощи." />
-        <meta property="og:image" content="/opengraph-zhancare.png" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://zhan.care/" />
-        <meta property="og:site_name" content="ZhanCare.AI" />
-
-
-        {/* Twitter Card Meta Tags */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="ZhanCare.AI - Будущее телемедицины" />
-        <meta name="twitter:description" content="ZhanCare.AI предоставляет современные технологии для медицинской помощи." />
-        <meta name="twitter:image" content="/opengraph-zhancare.png" />
-
-        {/* Canonical URL for SEO */}
-        <link rel="canonical" href="https://zhan.care/" />
       </head>
       <body className={twMerge(dmSans.className, "antialiased bg-[#F8FAFF]")}>
         <AuthProvider>
@@ -95,6 +74,9 @@ export default function RootLayout({
             <AuthPopup />
           </LanguageProvider>
         </AuthProvider>
+
+        {/* ✅ Toast Container for Global Notifications */}
+        <ToastContainer position="top-right" autoClose={3000} />
       </body>
     </html>
   );
