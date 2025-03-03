@@ -70,7 +70,7 @@ const DoctorProfile = () => {
           {[
             { id: "appointments", icon: faCalendar, title: "Мои Записи" },
             { id: "patients", icon: faNotesMedical, title: "История Пациентов" },
-            { id: "consultations", icon: faVideo, title: "Мои Консультации" }, // ✅ NEW TAB
+            { id: "consultations", icon: faVideo, title: "Видео Консультация" }, // ✅ NEW TAB
           ].map((item) => (
             <button
               key={item.id}

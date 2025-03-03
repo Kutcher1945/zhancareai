@@ -60,8 +60,8 @@ const VideoConsultation: React.FC = () => {
   
     setError(null);
     setLoading(true);
-    setWaitingForDoctor(true); // ✅ Show "Waiting for Doctor" message
-    
+    setWaitingForDoctor(true);
+  
     try {
       if (!token) {
         setError("🚫 Вы не авторизованы! Пожалуйста, войдите в систему.");
@@ -70,13 +70,15 @@ const VideoConsultation: React.FC = () => {
         return;
       }
   
+      console.log("📤 Sending request to start consultation:", { doctor_id: selectedDoctorId });
+  
       const response = await axios.post(
         "https://zhancareai-back.vercel.app/api/v1/consultations/start/",
         { doctor_id: selectedDoctorId },
-        {
-          headers: { Authorization: `Token ${token}` },
-        }
+        { headers: { Authorization: `Token ${token}` } }
       );
+  
+      console.log("✅ Consultation started:", response.data);
   
       if (response.status === 200 && response.data) {
         setDoctor(response.data.doctor);
@@ -88,12 +90,20 @@ const VideoConsultation: React.FC = () => {
       }
     } catch (error: any) {
       console.error("❌ Ошибка начала консультации:", error);
-      setError("⚠️ Ошибка при запуске звонка. Попробуйте позже.");
+  
+      if (error.response) {
+        console.error("📥 API Response Error:", error.response.data);
+        setError(error.response.data.error || "⚠️ Ошибка при запуске звонка. Попробуйте позже.");
+      } else {
+        setError("⚠️ Ошибка сети. Проверьте соединение.");
+      }
+  
       setWaitingForDoctor(false);
     }
   
     setLoading(false);
   };
+  
   
 
   // 🔹 Ожидание подтверждения врача
@@ -104,20 +114,32 @@ const VideoConsultation: React.FC = () => {
           `https://zhancareai-back.vercel.app/api/v1/consultations/status/?meeting_id=${meetingId}`,
           { headers: { Authorization: `Token ${token}` } }
         );
-
-        if (response.status === 200 && response.data.status === "ongoing") {
-          toast.success("Доктор принял звонок! Подключаемся...");
-          setWaitingForDoctor(false);
-          clearInterval(interval); // ✅ Останавливаем проверку
-          router.push(`/video-call?meetingId=${meetingId}`);
+  
+        if (response.status === 200) {
+          const { status } = response.data;
+          
+          if (status === "ongoing") {
+            toast.success("Доктор принял звонок! Подключаемся...");
+            setWaitingForDoctor(false);
+            clearInterval(interval);
+            router.push(`/video-call?meetingId=${meetingId}`);
+          } 
+          
+          // ✅ Stop polling if the call is rejected
+          if (status === "cancelled") {
+            toast.error("Доктор отклонил запрос. Попробуйте другого специалиста.");
+            setMeetingId(null);
+            setWaitingForDoctor(false);
+            clearInterval(interval);
+          }
         }
       } catch (error) {
         console.error("Ошибка проверки статуса консультации:", error);
       }
     }, 3000);
-
+  
     return () => clearInterval(interval);
-  };
+  };  
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">

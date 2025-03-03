@@ -14,6 +14,10 @@ import {
   faNotesMedical,
   faComment,
   faUser,
+  faEdit,
+  faLock,
+  faHistory,
+  faFileMedical
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -23,13 +27,14 @@ import VideoConsultation from "@/components/services/VideoConsultation";
 import Appointments from "@/components/services/Appointments";
 import MedicalHistory from "@/components/services/MedicalHistory";
 import ChatDoctors from "@/components/services/ChatDoctors";
+import ProfileDetails from "@/components/services/ProfileDetails";
 
-const ProfilePage = () => {
+const ProfilePage = function () {
   const { user, logoutUser, loading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("profile"); // ✅ Track active menu
+  const [activeTab, setActiveTab] = useState("profile");
 
-  useEffect(() => {
+  useEffect(function () {
     if (!loading && user?.role === "doctor") {
       router.replace("/doctor-profile");
     }
@@ -45,14 +50,24 @@ const ProfilePage = () => {
 
   if (!user) return null;
 
-  const handleLogout = () => {
+  // Ensure the user object contains all necessary fields
+  const userProfile = {
+    first_name: user.first_name || "",
+    last_name: user.last_name || "",
+    email: user.email || "",
+    // phone: user.phone || "",
+    // birth_date: user.birth_date || "",
+    // medical_history: user.medical_history || ""
+  };
+
+  function handleLogout() {
     toast.success("Вы успешно вышли!", { position: "top-right", autoClose: 3000 });
 
-    setTimeout(() => {
+    setTimeout(function () {
       logoutUser();
       router.replace("/");
     }, 1000);
-  };
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-100">
@@ -87,18 +102,22 @@ const ProfilePage = () => {
             { id: "appointments", icon: faCalendar, title: "Запись на прием" },
             { id: "history", icon: faNotesMedical, title: "Медицинская история" },
             { id: "chat", icon: faComment, title: "Чат с врачами" },
-          ].map((item) => (
-            <button
-              key={item.id}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition ${
-                activeTab === item.id ? "bg-white text-[#001E80] font-semibold shadow-md" : "hover:bg-white hover:text-[#001E80]"
-              }`}
-              onClick={() => setActiveTab(item.id)}
-            >
-              <FontAwesomeIcon icon={item.icon} className="text-lg" />
-              {item.title}
-            </button>
-          ))}
+            { id: "documents", icon: faFileMedical, title: "Документы" },
+            { id: "activity", icon: faHistory, title: "Активность" },
+          ].map(function (item) {
+            return (
+              <button
+                key={item.id}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition ${
+                  activeTab === item.id ? "bg-white text-[#001E80] font-semibold shadow-md" : "hover:bg-white hover:text-[#001E80]"
+                }`}
+                onClick={function () { setActiveTab(item.id); }}
+              >
+                <FontAwesomeIcon icon={item.icon} className="text-lg" />
+                {item.title}
+              </button>
+            );
+          })}
         </nav>
 
         {/* ✅ Logout Button */}
@@ -113,13 +132,13 @@ const ProfilePage = () => {
 
       {/* ✅ Main Content */}
       <main className="flex-1 p-6 ml-64">
-        {activeTab === "profile" && (
-          <h1 className="text-2xl font-semibold text-[#001E80]">Добро пожаловать, {user.first_name}!</h1>
-        )}
+        {activeTab === "profile" && <ProfileDetails user={userProfile} />}
         {activeTab === "video" && <VideoConsultation />}
         {activeTab === "appointments" && <Appointments />}
         {activeTab === "history" && <MedicalHistory />}
         {activeTab === "chat" && <ChatDoctors />}
+        {activeTab === "documents" && <div>📄 Раздел документов в разработке...</div>}
+        {activeTab === "activity" && <div>📊 История активности пользователя...</div>}
       </main>
     </div>
   );

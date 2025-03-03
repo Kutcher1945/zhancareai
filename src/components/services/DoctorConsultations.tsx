@@ -1,22 +1,42 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
+const statusTranslations: Record<string, string> = {
+  pending: "⏳ В ожидании",
+  ongoing: "🟢 В процессе",
+  completed: "✅ Завершено",
+  cancelled: "❌ Отменено",
+};
+
+interface Consultation {
+  id: number;
+  patient_name: string;
+  patient_email: string;
+  status: "pending" | "ongoing" | "completed" | "cancelled";
+}
+
 const DoctorConsultations: React.FC = () => {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const router = useRouter();
-  const [consultations, setConsultations] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [newConsultation, setNewConsultation] = useState<Consultation | null>(null);
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const seenConsultationIds = useRef(new Set<number>());
+  const isSoundPlaying = useRef(false);
+  const dismissedConsultations = useRef(new Set<number>()); // ✅ Track dismissed popups
 
   useEffect(() => {
-    fetchConsultations(); // Initial fetch
-
+    fetchConsultations();
     const interval = setInterval(() => {
-      fetchConsultations(); // Background fetch
+      fetchNewConsultations();
     }, 5000);
 
     return () => clearInterval(interval);
@@ -24,22 +44,84 @@ const DoctorConsultations: React.FC = () => {
 
   const fetchConsultations = async () => {
     setError(null);
-
+    setLoading(true);
     try {
       const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/consultations/", {
         headers: { Authorization: `Token ${token}` },
       });
 
-      // ✅ Only update state if there's new data
-      if (JSON.stringify(response.data) !== JSON.stringify(consultations)) {
-        setConsultations(response.data);
+      setConsultations(response.data);
+    } catch (error) {
+      console.error("Ошибка загрузки консультаций:", error);
+      setError("Ошибка загрузки консультаций.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closePopup = () => {
+    stopSound();
+    if (newConsultation) {
+      dismissedConsultations.current.add(newConsultation.id); // ✅ Mark as dismissed
+    }
+    setNewConsultation(null);
+  };
+
+  const fetchNewConsultations = async () => {
+    try {
+      const response = await axios.get<Consultation[]>("https://zhancareai-back.vercel.app/api/v1/consultations/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+
+      const newConsultations = response.data.filter(
+        (consultation) =>
+          consultation.status === "pending" &&
+          !seenConsultationIds.current.has(consultation.id) &&
+          !dismissedConsultations.current.has(consultation.id) // ✅ Do not show dismissed popups again
+      );
+
+      if (newConsultations.length > 0 && !newConsultation) {
+        setNewConsultation(newConsultations[0]);
+        newConsultations.forEach((c) => seenConsultationIds.current.add(c.id));
+        setConsultations((prev) => [...prev, ...newConsultations]);
+
+        if (!isSoundPlaying.current) {
+          playSound();
+        }
       }
     } catch (error) {
-      setError("Ошибка загрузки консультаций.");
+      console.error("Ошибка загрузки новых консультаций:", error);
+    }
+  };
+
+  const playSound = () => {
+    if (!isSoundPlaying.current) {
+      if (!audioRef.current) {
+        audioRef.current = new Audio("/sounds/notification.mp3");
+        audioRef.current.loop = true;
+      }
+
+      audioRef.current.play()
+        .then(() => {
+          isSoundPlaying.current = true;
+        })
+        .catch((error) => console.error("Ошибка воспроизведения звука:", error));
+    }
+  };
+
+  const stopSound = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      isSoundPlaying.current = false;
     }
   };
 
   const handleAccept = async (consultationId: number) => {
+    stopSound();
+    dismissedConsultations.current.add(consultationId); // ✅ Mark consultation as dismissed
+    setNewConsultation(null);
+
     try {
       const response = await axios.post(
         `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/accept/`,
@@ -48,22 +130,16 @@ const DoctorConsultations: React.FC = () => {
       );
 
       if (response.status === 200) {
-        toast.success("Консультация принята! Уведомляем пациента...");
+        const { meeting_id } = response.data;
+        toast.success("Консультация принята! Переход к видеозвонку...");
 
-        const notifyResponse = await axios.post(
-          `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/notify-patient/`,
-          {},
-          { headers: { Authorization: `Token ${token}` } }
-        );
+        setConsultations((prev) => prev.filter((c) => c.id !== consultationId));
+        seenConsultationIds.current.delete(consultationId);
 
-        if (notifyResponse.status === 200) {
-          toast.success("Пациент уведомлен! Начинаем звонок...");
-          router.push(`/video-call?meetingId=${notifyResponse.data.meeting_id}`);
-        } else {
-          toast.error("Не удалось уведомить пациента.");
-        }
+        setTimeout(fetchConsultations, 3000); // ✅ Delay refresh to prevent reopening popup
+        router.push(`/video-call?meetingId=${meeting_id}`);
       } else {
-        toast.error("Не удалось принять консультацию.");
+        toast.error("Ошибка при принятии консультации.");
       }
     } catch (error) {
       toast.error("Ошибка при принятии консультации.");
@@ -71,6 +147,10 @@ const DoctorConsultations: React.FC = () => {
   };
 
   const handleReject = async (consultationId: number) => {
+    stopSound();
+    dismissedConsultations.current.add(consultationId);
+    setNewConsultation(null);
+
     try {
       await axios.post(
         `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/reject/`,
@@ -79,49 +159,85 @@ const DoctorConsultations: React.FC = () => {
       );
 
       toast.info("Консультация отклонена.");
-      fetchConsultations();
+
+      setConsultations((prev) => prev.filter((c) => c.id !== consultationId));
+      seenConsultationIds.current.delete(consultationId);
+
+      setTimeout(fetchConsultations, 3000);
     } catch (error) {
       toast.error("Ошибка при отклонении консультации.");
     }
   };
 
   return (
-    <div className="p-6 bg-white shadow-lg rounded-xl">
+    <div className="p-6 bg-white shadow-lg rounded-xl relative">
       <h2 className="text-2xl font-semibold text-[#001E80]">Мои Консультации</h2>
       <p className="text-gray-600 mt-2">Список всех запланированных консультаций.</p>
 
       {error && <p className="text-red-500 mt-2">{error}</p>}
 
-      {consultations.length === 0 ? (
-        <p className="text-gray-600 mt-4">Нет запланированных консультаций.</p>
-      ) : (
-        <ul>
-          {consultations.map((consultation) => (
-            <li key={consultation.id} className="mt-4 p-4 border rounded-lg">
-              <p>🧑 Пациент: {consultation.patient.name} ({consultation.patient.email})</p>
-              <p>📅 Статус: <span className="font-semibold">{consultation.status}</span></p>
+      {/* ✅ New Consultation Popup */}
+      {newConsultation && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-1/3">
+            <h3 className="text-xl font-semibold text-[#001E80]">
+              🆕 Новая консультация
+            </h3>
+            <p className="mt-2 text-lg">Пациент: <strong>{newConsultation.patient_name}</strong></p>
+            <p className="text-gray-600">📧 {newConsultation.patient_email}</p>
+            <p className="text-gray-600 mt-2">📅 Статус: <strong>{statusTranslations[newConsultation.status]}</strong></p>
 
-              {consultation.status === "pending" && (
-                <div className="mt-2">
-                  <button 
-                    onClick={() => handleAccept(consultation.id)} 
-                    className="bg-green-500 px-4 py-2 rounded-lg text-white mr-2"
-                  >
-                    ✅ Принять и начать звонок
-                  </button>
-
-                  <button 
-                    onClick={() => handleReject(consultation.id)} 
-                    className="bg-red-500 px-4 py-2 rounded-lg text-white"
-                  >
-                    ❌ Отклонить
-                  </button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+            <div className="mt-4 flex justify-end gap-3">
+              <button onClick={() => handleAccept(newConsultation.id)} className="bg-green-500 px-4 py-2 rounded-lg text-white">
+                ✅ Принять
+              </button>
+              <button onClick={() => handleReject(newConsultation.id)} className="bg-red-500 px-4 py-2 rounded-lg text-white">
+                ❌ Отклонить
+              </button>
+              <button onClick={closePopup} className="bg-gray-500 px-4 py-2 rounded-lg text-white">
+                ❌ Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
       )}
+
+      {/* ✅ Main Table */}
+      <table className="w-full mt-4 border-collapse border">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border p-2">Пациент</th>
+            <th className="border p-2">Email</th>
+            <th className="border p-2">Статус</th>
+            <th className="border p-2">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {consultations
+            .filter((c, index, self) => index === self.findIndex((t) => t.id === c.id)) // ✅ Prevent duplicate rows
+            .map((consultation) => (
+              <tr key={consultation.id} className="border">
+                <td className="border p-2">{consultation.patient_name}</td>
+                <td className="border p-2">{consultation.patient_email}</td>
+                <td className="border p-2">
+                  <span className="px-2 py-1 rounded-lg bg-gray-200 text-sm">
+                    {statusTranslations[consultation.status] || consultation.status}
+                  </span>
+                </td>
+                <td className="border p-2">
+                  {consultation.status === "pending" && (
+                    <button
+                      onClick={() => handleAccept(consultation.id)}
+                      className="bg-green-500 px-4 py-2 rounded-lg text-white"
+                    >
+                      ✅ Принять
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
     </div>
   );
 };
