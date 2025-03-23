@@ -19,7 +19,7 @@ const Appointments = () => {
 
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/v1/auth/doctor/available/", {
+      const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/auth/doctor/available/", {
         headers: { Authorization: `Token ${token}` },
       });
       setDoctors(response.data.doctors || []);
@@ -38,7 +38,7 @@ const Appointments = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/v1/appointments/",
+        "https://zhancareai-back.vercel.app/api/v1/appointments/",
         {
           doctor_id: selectedDoctor,
           appointment_time: appointmentTime,

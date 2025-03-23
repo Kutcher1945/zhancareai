@@ -46,7 +46,7 @@ const DoctorConsultations: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/v1/consultations/", {
+      const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/consultations/", {
         headers: { Authorization: `Token ${token}` },
       });
 
@@ -69,7 +69,7 @@ const DoctorConsultations: React.FC = () => {
 
   const fetchNewConsultations = async () => {
     try {
-      const response = await axios.get<Consultation[]>("http://127.0.0.1:8000/api/v1/consultations/", {
+      const response = await axios.get<Consultation[]>("https://zhancareai-back.vercel.app/api/v1/consultations/", {
         headers: { Authorization: `Token ${token}` },
       });
 
@@ -125,7 +125,7 @@ const DoctorConsultations: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/v1/consultations/${consultationId}/accept/`,
+        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/accept/`,
         {},
         { headers: { Authorization: `Token ${token}` } }
       );
@@ -154,7 +154,7 @@ const DoctorConsultations: React.FC = () => {
 
     try {
       await axios.post(
-        `http://127.0.0.1:8000/api/v1/consultations/${consultationId}/reject/`,
+        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/reject/`,
         {},
         { headers: { Authorization: `Token ${token}` } }
       );
