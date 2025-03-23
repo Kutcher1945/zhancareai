@@ -6,15 +6,23 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Logo from "@/assets/logosaas.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendar, faNotesMedical, faUser, faSignOutAlt, faVideo } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCalendar,
+  faNotesMedical,
+  faSignOutAlt,
+  faVideo,
+  faBars,
+  faTimes
+} from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import DoctorConsultations from "@/components/services/DoctorConsultations"; // ✅ Import DoctorConsultations
+import DoctorConsultations from "@/components/services/DoctorConsultations";
 
 const DoctorProfile = () => {
   const { user, logoutUser, loading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("appointments");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && user?.role !== "doctor") {
@@ -41,43 +49,69 @@ const DoctorProfile = () => {
     }, 1000);
   };
 
+  const menuItems = [
+    { id: "appointments", icon: faCalendar, title: "Мои Записи" },
+    { id: "patients", icon: faNotesMedical, title: "История Пациентов" },
+    { id: "consultations", icon: faVideo, title: "Видео Консультация" },
+  ];
+
   return (
-    <div className="min-h-screen flex bg-gray-100">
-      {/* ✅ Sidebar Navigation */}
-      <aside className="w-64 bg-[#001E80] text-white min-h-screen p-6 fixed left-0 top-0 bottom-0">
-        <div className="flex items-center">
-          <Image src={Logo} alt="Logo" width={130} height={40} className="h-10 w-auto" />
+    <div className="min-h-screen bg-gray-100 flex flex-col sm:flex-row">
+      {/* ✅ Mobile Header */}
+      <header className="sm:hidden bg-[#001E80] text-white flex items-center justify-between px-4 py-3">
+        <Image src={Logo} alt="Logo" width={110} height={40} />
+        <button onClick={() => setSidebarOpen(true)}>
+          <FontAwesomeIcon icon={faBars} className="text-2xl" />
+        </button>
+      </header>
+
+      {/* ✅ Sidebar */}
+      <aside
+        className={`
+          fixed sm:relative sm:sticky top-0 sm:top-0
+          h-full sm:h-screen sm:min-h-screen
+          z-40 left-0 w-64 bg-[#001E80] text-white p-6
+          overflow-y-auto transform transition-transform duration-300
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          sm:translate-x-0 sm:flex-shrink-0
+        `}
+      >
+        {/* ✅ Close Button (mobile only) */}
+        <div className="sm:hidden flex justify-end mb-4">
+          <button onClick={() => setSidebarOpen(false)}>
+            <FontAwesomeIcon icon={faTimes} className="text-xl" />
+          </button>
         </div>
 
-        {/* ✅ Doctor Profile */}
+        {/* ✅ Logo */}
+        <div className="flex items-center">
+          <Image src={Logo} alt="Logo" width={130} height={40} />
+        </div>
+
+        {/* ✅ Doctor Info */}
         <div className="mt-6 text-center">
           <div className="w-20 h-20 bg-white text-[#001E80] rounded-full flex items-center justify-center text-3xl font-bold mx-auto shadow-md">
             {user.first_name.charAt(0)}
           </div>
-
-          {/* ✅ Doctor Role */}
-          <span className="text-sm uppercase font-bold text-gray-300 mt-2 block">
-            Доктор
-          </span>
-
-          {/* ✅ Doctor Name & Email */}
+          <span className="text-sm uppercase font-bold text-gray-300 mt-2 block">Доктор</span>
           <h2 className="text-lg font-semibold mt-3">{user.first_name} {user.last_name}</h2>
-          <p className="text-sm text-gray-200">{user.email}</p>
+          <p className="text-sm text-gray-200 break-words">{user.email}</p>
         </div>
 
-        {/* ✅ Doctor Navigation Menu */}
+        {/* ✅ Navigation Menu */}
         <nav className="mt-6 space-y-4">
-          {[
-            { id: "appointments", icon: faCalendar, title: "Мои Записи" },
-            { id: "patients", icon: faNotesMedical, title: "История Пациентов" },
-            { id: "consultations", icon: faVideo, title: "Видео Консультация" }, // ✅ NEW TAB
-          ].map((item) => (
+          {menuItems.map((item) => (
             <button
               key={item.id}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition ${
-                activeTab === item.id ? "bg-white text-[#001E80]" : "hover:bg-white hover:text-[#001E80]"
+                activeTab === item.id
+                  ? "bg-white text-[#001E80] font-semibold shadow-md"
+                  : "hover:bg-white hover:text-[#001E80]"
               }`}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                setSidebarOpen(false); // Close on mobile
+              }}
             >
               <FontAwesomeIcon icon={item.icon} className="text-lg" />
               {item.title}
@@ -85,7 +119,7 @@ const DoctorProfile = () => {
           ))}
         </nav>
 
-        {/* ✅ Logout Button */}
+        {/* ✅ Logout */}
         <button
           onClick={handleLogout}
           className="w-full mt-6 bg-red-500 px-4 py-3 rounded-lg text-white font-medium flex items-center gap-3 hover:opacity-85 transition"
@@ -96,10 +130,14 @@ const DoctorProfile = () => {
       </aside>
 
       {/* ✅ Main Content */}
-      <main className="flex-1 p-6 ml-64">
-        {activeTab === "appointments" && <h1 className="text-2xl font-semibold text-[#001E80]">Ваши запланированные консультации</h1>}
-        {activeTab === "patients" && <h1 className="text-2xl font-semibold text-[#001E80]">История пациентов</h1>}
-        {activeTab === "consultations" && <DoctorConsultations />} {/* ✅ Show the consultations page */}
+      <main className="flex-1 p-3">
+        {activeTab === "appointments" && (
+          <h1 className="text-2xl font-semibold text-[#001E80]">Ваши запланированные консультации</h1>
+        )}
+        {activeTab === "patients" && (
+          <h1 className="text-2xl font-semibold text-[#001E80]">История пациентов</h1>
+        )}
+        {activeTab === "consultations" && <DoctorConsultations />}
       </main>
     </div>
   );

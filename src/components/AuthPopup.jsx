@@ -39,8 +39,8 @@ const AuthPopup = () => {
     setError("");
   
     const apiUrl = activeTab === "login"
-      ? "https://zhancareai-back.vercel.app/api/v1/auth/login/"
-      : "https://zhancareai-back.vercel.app/api/v1/auth/register/";
+      ? "http://127.0.0.1:8000/api/v1/auth/login/"
+      : "http://127.0.0.1:8000/api/v1/auth/register/";
   
     const payload = activeTab === "login"
       ? { email: formData.email, password: formData.password }
@@ -167,7 +167,7 @@ const AuthPopup = () => {
                         type="submit"
                         className="w-full bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white py-3 md:py-4 rounded-lg font-medium hover:opacity-85 transition"
                       >
-                        {loading ? "Loading..." : translations.loginButton}
+                        {loading ? "Входим..." : translations.loginButton}
                       </button>
                     </>
                   ) : (
@@ -230,7 +230,7 @@ const AuthPopup = () => {
                         type="submit"
                         className="w-full bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white py-3 md:py-4 rounded-lg font-medium hover:opacity-85 transition"
                       >
-                        {loading ? "Loading..." : translations.registerButton}
+                        {loading ? "Регистрируемся..." : translations.registerButton}
                       </button>
                     </>
                   )}

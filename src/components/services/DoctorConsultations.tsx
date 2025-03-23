@@ -31,7 +31,7 @@ const DoctorConsultations: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const seenConsultationIds = useRef(new Set<number>());
   const isSoundPlaying = useRef(false);
-  const dismissedConsultations = useRef(new Set<number>()); // ✅ Track dismissed popups
+  const dismissedConsultations = useRef(new Set<number>());
 
   useEffect(() => {
     fetchConsultations();
@@ -46,7 +46,7 @@ const DoctorConsultations: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/consultations/", {
+      const response = await axios.get("http://127.0.0.1:8000/api/v1/consultations/", {
         headers: { Authorization: `Token ${token}` },
       });
 
@@ -62,14 +62,14 @@ const DoctorConsultations: React.FC = () => {
   const closePopup = () => {
     stopSound();
     if (newConsultation) {
-      dismissedConsultations.current.add(newConsultation.id); // ✅ Mark as dismissed
+      dismissedConsultations.current.add(newConsultation.id);
     }
     setNewConsultation(null);
   };
 
   const fetchNewConsultations = async () => {
     try {
-      const response = await axios.get<Consultation[]>("https://zhancareai-back.vercel.app/api/v1/consultations/", {
+      const response = await axios.get<Consultation[]>("http://127.0.0.1:8000/api/v1/consultations/", {
         headers: { Authorization: `Token ${token}` },
       });
 
@@ -77,7 +77,7 @@ const DoctorConsultations: React.FC = () => {
         (consultation) =>
           consultation.status === "pending" &&
           !seenConsultationIds.current.has(consultation.id) &&
-          !dismissedConsultations.current.has(consultation.id) // ✅ Do not show dismissed popups again
+          !dismissedConsultations.current.has(consultation.id)
       );
 
       if (newConsultations.length > 0 && !newConsultation) {
@@ -101,7 +101,8 @@ const DoctorConsultations: React.FC = () => {
         audioRef.current.loop = true;
       }
 
-      audioRef.current.play()
+      audioRef.current
+        .play()
         .then(() => {
           isSoundPlaying.current = true;
         })
@@ -119,12 +120,12 @@ const DoctorConsultations: React.FC = () => {
 
   const handleAccept = async (consultationId: number) => {
     stopSound();
-    dismissedConsultations.current.add(consultationId); // ✅ Mark consultation as dismissed
+    dismissedConsultations.current.add(consultationId);
     setNewConsultation(null);
 
     try {
       const response = await axios.post(
-        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/accept/`,
+        `http://127.0.0.1:8000/api/v1/consultations/${consultationId}/accept/`,
         {},
         { headers: { Authorization: `Token ${token}` } }
       );
@@ -135,8 +136,8 @@ const DoctorConsultations: React.FC = () => {
 
         setConsultations((prev) => prev.filter((c) => c.id !== consultationId));
         seenConsultationIds.current.delete(consultationId);
+        setTimeout(fetchConsultations, 3000);
 
-        setTimeout(fetchConsultations, 3000); // ✅ Delay refresh to prevent reopening popup
         router.push(`/video-call?meetingId=${meeting_id}`);
       } else {
         toast.error("Ошибка при принятии консультации.");
@@ -153,16 +154,14 @@ const DoctorConsultations: React.FC = () => {
 
     try {
       await axios.post(
-        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/reject/`,
+        `http://127.0.0.1:8000/api/v1/consultations/${consultationId}/reject/`,
         {},
         { headers: { Authorization: `Token ${token}` } }
       );
 
       toast.info("Консультация отклонена.");
-
       setConsultations((prev) => prev.filter((c) => c.id !== consultationId));
       seenConsultationIds.current.delete(consultationId);
-
       setTimeout(fetchConsultations, 3000);
     } catch (error) {
       toast.error("Ошибка при отклонении консультации.");
@@ -170,31 +169,43 @@ const DoctorConsultations: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-white shadow-lg rounded-xl relative">
+    <div className="p-4 sm:p-6 bg-white shadow-lg rounded-xl relative">
       <h2 className="text-2xl font-semibold text-[#001E80]">Мои Консультации</h2>
       <p className="text-gray-600 mt-2">Список всех запланированных консультаций.</p>
 
       {error && <p className="text-red-500 mt-2">{error}</p>}
 
-      {/* ✅ New Consultation Popup */}
+      {/* ✅ Popup */}
       {newConsultation && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-1/3">
-            <h3 className="text-xl font-semibold text-[#001E80]">
-              🆕 Новая консультация
-            </h3>
-            <p className="mt-2 text-lg">Пациент: <strong>{newConsultation.patient_name}</strong></p>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50 px-4">
+          <div className="bg-white w-full sm:w-1/2 lg:w-1/3 p-6 rounded-lg shadow-xl">
+            <h3 className="text-xl font-semibold text-[#001E80]">🆕 Новая консультация</h3>
+            <p className="mt-2 text-lg">
+              Пациент: <strong>{newConsultation.patient_name}</strong>
+            </p>
             <p className="text-gray-600">📧 {newConsultation.patient_email}</p>
-            <p className="text-gray-600 mt-2">📅 Статус: <strong>{statusTranslations[newConsultation.status]}</strong></p>
+            <p className="text-gray-600 mt-2">
+              📅 Статус:{" "}
+              <strong>{statusTranslations[newConsultation.status]}</strong>
+            </p>
 
-            <div className="mt-4 flex justify-end gap-3">
-              <button onClick={() => handleAccept(newConsultation.id)} className="bg-green-500 px-4 py-2 rounded-lg text-white">
+            <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+              <button
+                onClick={() => handleAccept(newConsultation.id)}
+                className="bg-green-500 px-4 py-2 rounded-lg text-white w-full sm:w-auto"
+              >
                 ✅ Принять
               </button>
-              <button onClick={() => handleReject(newConsultation.id)} className="bg-red-500 px-4 py-2 rounded-lg text-white">
+              <button
+                onClick={() => handleReject(newConsultation.id)}
+                className="bg-red-500 px-4 py-2 rounded-lg text-white w-full sm:w-auto"
+              >
                 ❌ Отклонить
               </button>
-              <button onClick={closePopup} className="bg-gray-500 px-4 py-2 rounded-lg text-white">
+              <button
+                onClick={closePopup}
+                className="bg-gray-500 px-4 py-2 rounded-lg text-white w-full sm:w-auto"
+              >
                 ❌ Закрыть
               </button>
             </div>
@@ -202,42 +213,44 @@ const DoctorConsultations: React.FC = () => {
         </div>
       )}
 
-      {/* ✅ Main Table */}
-      <table className="w-full mt-4 border-collapse border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">Пациент</th>
-            <th className="border p-2">Email</th>
-            <th className="border p-2">Статус</th>
-            <th className="border p-2">Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          {consultations
-            .filter((c, index, self) => index === self.findIndex((t) => t.id === c.id)) // ✅ Prevent duplicate rows
-            .map((consultation) => (
-              <tr key={consultation.id} className="border">
-                <td className="border p-2">{consultation.patient_name}</td>
-                <td className="border p-2">{consultation.patient_email}</td>
-                <td className="border p-2">
-                  <span className="px-2 py-1 rounded-lg bg-gray-200 text-sm">
-                    {statusTranslations[consultation.status] || consultation.status}
-                  </span>
-                </td>
-                <td className="border p-2">
-                  {consultation.status === "pending" && (
-                    <button
-                      onClick={() => handleAccept(consultation.id)}
-                      className="bg-green-500 px-4 py-2 rounded-lg text-white"
-                    >
-                      ✅ Принять
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      {/* ✅ Table */}
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-sm sm:text-base border-collapse border min-w-[600px]">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2">Пациент</th>
+              <th className="border p-2">Email</th>
+              <th className="border p-2">Статус</th>
+              <th className="border p-2">Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {consultations
+              .filter((c, i, self) => i === self.findIndex((t) => t.id === c.id))
+              .map((consultation) => (
+                <tr key={consultation.id} className="border">
+                  <td className="border p-2">{consultation.patient_name}</td>
+                  <td className="border p-2">{consultation.patient_email}</td>
+                  <td className="border p-2">
+                    <span className="px-2 py-1 rounded-lg bg-gray-200 text-sm">
+                      {statusTranslations[consultation.status] || consultation.status}
+                    </span>
+                  </td>
+                  <td className="border p-2">
+                    {consultation.status === "pending" && (
+                      <button
+                        onClick={() => handleAccept(consultation.id)}
+                        className="bg-green-500 px-4 py-1.5 rounded-md text-white text-sm"
+                      >
+                        ✅ Принять
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
