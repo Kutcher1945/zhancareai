@@ -37,7 +37,7 @@ const AuthPopup = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-  
+    
     const apiUrl = activeTab === "login"
       ? "https://zhancareai-back.vercel.app/api/v1/auth/login/"
       : "https://zhancareai-back.vercel.app/api/v1/auth/register/";

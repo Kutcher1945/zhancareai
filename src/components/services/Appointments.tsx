@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-toastify";
+import { Loader2 } from "lucide-react";
 
 const Appointments = () => {
   const { token } = useAuth();
@@ -11,6 +12,7 @@ const Appointments = () => {
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
   const [appointmentTime, setAppointmentTime] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [fetchingDoctors, setFetchingDoctors] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,6 +20,7 @@ const Appointments = () => {
   }, []);
 
   const fetchDoctors = async () => {
+    setFetchingDoctors(true);
     try {
       const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/auth/doctor/available/", {
         headers: { Authorization: `Token ${token}` },
@@ -26,6 +29,8 @@ const Appointments = () => {
     } catch (err) {
       console.error("Ошибка загрузки врачей:", err);
       setError("⚠️ Не удалось загрузить список врачей.");
+    } finally {
+      setFetchingDoctors(false);
     }
   };
 
@@ -35,6 +40,11 @@ const Appointments = () => {
       return;
     }
 
+    if (new Date(appointmentTime) <= new Date()) {
+      toast.error("Пожалуйста, выберите дату и время в будущем.");
+      return;
+    }
+    
     setLoading(true);
     try {
       const response = await axios.post(
@@ -61,18 +71,18 @@ const Appointments = () => {
   };
 
   return (
-    <div className="w-full sm:max-w-3xl sm:mx-auto px-4 sm:px-0">
-      <div className="p-6 bg-white shadow-lg rounded-xl">
-        <h2 className="text-2xl font-semibold text-[#001E80]">Запись на прием</h2>
-        <p className="text-gray-600 mt-2">Выберите удобное время для приема у врача.</p>
+    <div className="w-full sm:max-w-3xl sm:mx-auto px-4 sm:px-0 py-8">
+      <div className="p-6 bg-white shadow-xl rounded-xl">
+        <h2 className="text-2xl font-bold text-[#001E80]">📅 Запись на прием</h2>
+        <p className="text-gray-600 mt-2">Выберите удобное время для консультации с врачом.</p>
 
         {error && <p className="text-red-500 mt-4">{error}</p>}
 
         {/* Doctor Selection */}
-        <div className="mt-4">
-          <label className="block text-gray-700 mb-1">Выберите врача:</label>
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Выберите врача:</label>
           <select
-            className="w-full p-2 border rounded-lg"
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             value={selectedDoctor || ""}
             onChange={(e) => setSelectedDoctor(Number(e.target.value))}
           >
@@ -83,16 +93,23 @@ const Appointments = () => {
               </option>
             ))}
           </select>
+
+          {fetchingDoctors && (
+            <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
+              <Loader2 className="animate-spin w-4 h-4" /> Загрузка списка врачей...
+            </p>
+          )}
         </div>
 
         {/* Appointment Time */}
         <div className="mt-4">
-          <label className="block text-gray-700 mb-1">Дата и время:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Дата и время:</label>
           <input
             type="datetime-local"
-            className="w-full p-2 border rounded-lg"
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={appointmentTime}
             onChange={(e) => setAppointmentTime(e.target.value)}
+            min={new Date().toISOString().slice(0, 16)} // prevent past dates
           />
         </div>
 
@@ -100,8 +117,8 @@ const Appointments = () => {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className={`mt-6 bg-[#001E80] text-white px-6 py-3 rounded-lg transition ${
-            loading ? "opacity-50 cursor-not-allowed" : "hover:opacity-85"
+          className={`mt-6 bg-[#001E80] text-white px-6 py-3 rounded-lg transition font-medium ${
+            loading ? "opacity-50 cursor-not-allowed" : "hover:bg-[#0030d8]"
           }`}
         >
           {loading ? "Создание записи..." : "Записаться"}
