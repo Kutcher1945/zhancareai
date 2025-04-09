@@ -1,28 +1,43 @@
 "use client";
 
 import Image from "next/image";
-import Logo from "@/assets/logosaas_new2.png";
+import Logo from "@/assets/logosaas.png";
+import { useAuth } from "@/context/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faBell } from "@fortawesome/free-solid-svg-icons";
 
-export const Header = () => {
-  const notificationCount = 3; // 🔔 Можно будет подключить из бэка
+export const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
+  const { user } = useAuth();
 
   return (
-    <header className="bg-white shadow-sm flex items-center justify-between px-6 py-4 border-b border-gray-200">
-      {/* Logo */}
-      <div className="flex items-center gap-2">
-        <Image src={Logo} alt="Logo" width={120} height={40} />
+    <header className="flex justify-between items-center bg-white border-b p-4 shadow-sm sticky top-0 z-30">
+      {/* Left - Mobile Menu Button */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onMenuClick}
+          className="sm:hidden bg-[#001E80] text-white p-2 rounded-md shadow-md"
+        >
+          <FontAwesomeIcon icon={faBars} />
+        </button>
+        {/* <Image src={Logo} alt="Logo" width={140} height={40} className="hidden sm:block" /> */}
+        {/* <span className="text-[#001E80] font-semibold hidden sm:block">
+          Личный кабинет
+        </span> */}
       </div>
 
-      {/* Notifications */}
-      <div className="relative">
-        <FontAwesomeIcon icon={faBell} className="text-gray-600 text-xl cursor-pointer" />
-        {notificationCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
-            {notificationCount}
+      {/* Right - Notifications & User */}
+      <div className="flex items-center gap-4">
+        <button className="relative text-gray-500 hover:text-[#001E80] transition">
+          <FontAwesomeIcon icon={faBell} className="text-xl" />
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
+            3
           </span>
-        )}
+        </button>
+
+        {/* <div className="text-sm text-gray-700">
+          
+          {user?.first_name} {user?.last_name}
+        </div> */}
       </div>
     </header>
   );

@@ -1,7 +1,8 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Logo from "@/assets/logosaas.png";
@@ -14,7 +15,6 @@ import {
   faBars,
   faTimes
 } from "@fortawesome/free-solid-svg-icons";
-import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DoctorConsultations from "@/components/services/DoctorConsultations";
 
@@ -67,13 +67,11 @@ const DoctorProfile = () => {
 
       {/* ✅ Sidebar */}
       <aside
-        className={`
-          fixed sm:relative sm:sticky top-0 sm:top-0
+        className={`fixed sm:relative sm:sticky top-0 sm:top-0
           h-full sm:h-screen sm:min-h-screen
-          z-40 left-0 w-64 bg-[#001E80] text-white p-6
+          z-40 left-0 w-64 bg-gradient-to-r from-[#001E80] to-[#3A50FF] text-white p-6
           overflow-y-auto transform transition-transform duration-300
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          sm:translate-x-0 sm:flex-shrink-0
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 sm:flex-shrink-0
         `}
       >
         {/* ✅ Close Button (mobile only) */}
@@ -84,7 +82,7 @@ const DoctorProfile = () => {
         </div>
 
         {/* ✅ Logo */}
-        <div className="flex items-center">
+        <div className="flex items-center justify-center mb-6">
           <Image src={Logo} alt="Logo" width={130} height={40} />
         </div>
 

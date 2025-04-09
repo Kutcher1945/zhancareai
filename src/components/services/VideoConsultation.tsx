@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { api } from "@/utils/api"; // ✅ Используем централизованный API instance
+import { api } from "@/utils/api";
+import { Loader2 } from "lucide-react";
 
 const VideoConsultation: React.FC = () => {
   const { token } = useAuth();
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const [meetingId, setMeetingId] = useState<string | null>(null);
-  const [doctor, setDoctor] = useState<{ id: number; name: string; email: string } | null>(null);
   const [doctors, setDoctors] = useState<{ id: number; name: string; email: string }[]>([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fetchingDoctors, setFetchingDoctors] = useState(true);
   const [waitingForDoctor, setWaitingForDoctor] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,14 +25,20 @@ const VideoConsultation: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    let interval: NodeJS.Timeout;
     if (waitingForDoctor && meetingId) {
-      pollForDoctorAcceptance();
+      interval = pollForDoctorAcceptance();
     }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [waitingForDoctor, meetingId]);
 
-  // 🔹 Получение доступных врачей
   const fetchDoctors = async () => {
+    setFetchingDoctors(true);
     setError(null);
+
     try {
       if (!token) {
         setError("🚫 Вы не авторизованы! Пожалуйста, войдите в систему.");
@@ -46,13 +55,15 @@ const VideoConsultation: React.FC = () => {
     } catch (error: any) {
       console.error("❌ Ошибка загрузки врачей:", error);
       setError("⚠️ Ошибка загрузки списка врачей. Попробуйте позже.");
+    } finally {
+      setFetchingDoctors(false);
     }
   };
 
-  // 🔹 Начало консультации (пациент вызывает врача)
   const handleStartCall = async () => {
     if (!selectedDoctorId) {
       setError("⚠️ Пожалуйста, выберите врача перед началом звонка.");
+      scrollToTop();
       return;
     }
 
@@ -61,21 +72,9 @@ const VideoConsultation: React.FC = () => {
     setWaitingForDoctor(true);
 
     try {
-      if (!token) {
-        setError("🚫 Вы не авторизованы! Пожалуйста, войдите в систему.");
-        setLoading(false);
-        setWaitingForDoctor(false);
-        return;
-      }
-
-      console.log("📤 Sending request to start consultation:", { doctor_id: selectedDoctorId });
-
       const response = await api.post("/consultations/start/", { doctor_id: selectedDoctorId });
 
-      console.log("✅ Consultation started:", response.data);
-
       if (response.status === 200 && response.data) {
-        setDoctor(response.data.doctor);
         setMeetingId(response.data.meeting_id);
         toast.success("Консультация запрошена! Ожидаем подтверждения врача.");
       } else {
@@ -84,21 +83,14 @@ const VideoConsultation: React.FC = () => {
       }
     } catch (error: any) {
       console.error("❌ Ошибка начала консультации:", error);
-
-      if (error.response) {
-        console.error("📥 API Response Error:", error.response.data);
-        setError(error.response.data.error || "⚠️ Ошибка при запуске звонка. Попробуйте позже.");
-      } else {
-        setError("⚠️ Ошибка сети. Проверьте соединение.");
-      }
-
+      setError(error?.response?.data?.error || "⚠️ Ошибка сети. Попробуйте позже.");
       setWaitingForDoctor(false);
+      scrollToTop();
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  // 🔹 Ожидание подтверждения врача
   const pollForDoctorAcceptance = () => {
     const interval = setInterval(async () => {
       try {
@@ -109,16 +101,14 @@ const VideoConsultation: React.FC = () => {
 
           if (status === "ongoing") {
             toast.success("Доктор принял звонок! Подключаемся...");
-            setWaitingForDoctor(false);
             clearInterval(interval);
+            setWaitingForDoctor(false);
             router.push(`/video-call?meetingId=${meetingId}`);
-          }
-
-          if (status === "cancelled") {
+          } else if (status === "cancelled") {
             toast.error("Доктор отклонил запрос. Попробуйте другого специалиста.");
+            clearInterval(interval);
             setMeetingId(null);
             setWaitingForDoctor(false);
-            clearInterval(interval);
           }
         }
       } catch (error) {
@@ -126,43 +116,69 @@ const VideoConsultation: React.FC = () => {
       }
     }, 3000);
 
-    return () => clearInterval(interval);
+    return interval;
+  };
+
+  const scrollToTop = () => {
+    containerRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <div className="p-6 bg-white shadow-lg rounded-xl">
-      <h2 className="text-2xl font-semibold text-[#001E80]">Видео консультация</h2>
+    <div ref={containerRef} className="p-6 bg-white shadow-xl rounded-2xl max-w-xl mx-auto w-full">
+      <h2 className="text-2xl font-bold text-[#001E80]">Видео консультация</h2>
       <p className="text-gray-600 mt-2">Выберите врача для онлайн-видеозвонка.</p>
 
-      {error && <p className="text-red-500 mt-2">{error}</p>}
+      {error && <p className="text-red-500 mt-4">{error}</p>}
 
-      {/* 🔹 Выбор врача */}
-      <div className="mt-4">
-        <label className="block text-gray-700">Выберите доступного врача:</label>
-        <select
-          className="w-full p-2 border rounded-lg mt-2"
-          value={selectedDoctorId || ""}
-          onChange={(e) => setSelectedDoctorId(Number(e.target.value))}
+      <div className="mt-6 space-y-4">
+        {/* 🔹 Выбор врача */}
+        <div>
+          <label className="block text-gray-700 mb-2 text-sm">Выберите доступного врача:</label>
+          {fetchingDoctors ? (
+            <div className="text-sm text-gray-500">Загрузка списка врачей...</div>
+          ) : (
+            <select
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 transition"
+              value={selectedDoctorId || ""}
+              onChange={(e) => setSelectedDoctorId(Number(e.target.value))}
+            >
+              <option value="">-- Выберите врача --</option>
+              {doctors.map((doc) => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.name} ({doc.email})
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* 🔹 Кнопка старта */}
+        <button
+          onClick={handleStartCall}
+          className={`w-full text-white py-3 rounded-lg font-medium transition flex items-center justify-center ${
+            loading || waitingForDoctor
+              ? "bg-gradient-to-r from-[#001E80] to-[#3A50FF] opacity-50 cursor-not-allowed"
+              : "bg-gradient-to-r from-[#001E80] to-[#3A50FF] hover:opacity-90"
+          }`}
+          disabled={loading || !selectedDoctorId || waitingForDoctor}
         >
-          <option value="">-- Выберите врача --</option>
-          {doctors.map((doc) => (
-            <option key={doc.id} value={doc.id}>
-              {doc.name} ({doc.email})
-            </option>
-          ))}
-        </select>
-      </div>
+          {waitingForDoctor ? (
+            <>
+              <Loader2 className="animate-spin w-5 h-5 mr-2" />
+              Ожидание врача...
+            </>
+          ) : (
+            "Начать звонок"
+          )}
+        </button>
 
-      {/* 🔹 Кнопка начала консультации */}
-      <button
-        onClick={handleStartCall}
-        className={`mt-4 bg-[#001E80] text-white px-6 py-3 rounded-lg transition ${
-          loading || waitingForDoctor ? "opacity-50 cursor-not-allowed" : "hover:opacity-85"
-        }`}
-        disabled={loading || !selectedDoctorId || waitingForDoctor}
-      >
-        {waitingForDoctor ? "Ожидание врача..." : "Начать звонок"}
-      </button>
+        {/* ⏳ Loading Indicator */}
+        {waitingForDoctor && (
+          <div className="text-sm text-blue-600 mt-2 animate-pulse">
+            Ожидание подтверждения врача...
+          </div>
+        )}
+      </div>
     </div>
   );
 };

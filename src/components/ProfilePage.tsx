@@ -14,13 +14,15 @@ import MedicalHistory from "@/components/services/MedicalHistory";
 import ChatDoctors from "@/components/services/ChatDoctors";
 import ProfileDetails from "@/components/services/ProfileDetails";
 import { ActivityLog } from "@/components/services/ActivityLog";
-import { toast } from "react-toastify";
+import Image from "next/image";
+import Logo from "@/assets/logosaas_new2.png";
 
 const ProfilePage = () => {
-  const { user, logoutUser, loading } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("profile");
+  const [sidebarOpen, setSidebarOpen] = useState(false); // ✅ Контроль sidebar
 
   useEffect(() => {
     if (!loading && user?.role === "doctor") {
@@ -30,8 +32,11 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-lg">
-        🔄 Проверка авторизации...
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+        <div className="animate-pulse">
+          <Image src={Logo} alt="Loading..." width={120} height={120} priority />
+        </div>
+        <p className="text-gray-500 mt-4 text-sm">Проверка авторизации...</p>
       </div>
     );
   }
@@ -67,13 +72,18 @@ const ProfilePage = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* Sidebar with control */}
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <Header />
+        {/* Header with menu toggle */}
+        <Header onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Main Container */}
         <main className="flex-1 p-4 sm:p-6 bg-gray-50">
