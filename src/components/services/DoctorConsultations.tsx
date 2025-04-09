@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { api } from "@/utils/api"; // ✅ Подключаем api instance
 
 const statusTranslations: Record<string, string> = {
   pending: "⏳ В ожидании",
@@ -35,10 +35,7 @@ const DoctorConsultations: React.FC = () => {
 
   useEffect(() => {
     fetchConsultations();
-    const interval = setInterval(() => {
-      fetchNewConsultations();
-    }, 5000);
-
+    const interval = setInterval(fetchNewConsultations, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -46,10 +43,7 @@ const DoctorConsultations: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/consultations/", {
-        headers: { Authorization: `Token ${token}` },
-      });
-
+      const response = await api.get<Consultation[]>("/consultations/");
       setConsultations(response.data);
     } catch (error) {
       console.error("Ошибка загрузки консультаций:", error);
@@ -69,10 +63,7 @@ const DoctorConsultations: React.FC = () => {
 
   const fetchNewConsultations = async () => {
     try {
-      const response = await axios.get<Consultation[]>("https://zhancareai-back.vercel.app/api/v1/consultations/", {
-        headers: { Authorization: `Token ${token}` },
-      });
-
+      const response = await api.get<Consultation[]>("/consultations/");
       const newConsultations = response.data.filter(
         (consultation) =>
           consultation.status === "pending" &&
@@ -124,12 +115,7 @@ const DoctorConsultations: React.FC = () => {
     setNewConsultation(null);
 
     try {
-      const response = await axios.post(
-        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/accept/`,
-        {},
-        { headers: { Authorization: `Token ${token}` } }
-      );
-
+      const response = await api.post<{ meeting_id: string }>(`/consultations/${consultationId}/accept/`, {});
       if (response.status === 200) {
         const { meeting_id } = response.data;
         toast.success("Консультация принята! Переход к видеозвонку...");
@@ -143,6 +129,7 @@ const DoctorConsultations: React.FC = () => {
         toast.error("Ошибка при принятии консультации.");
       }
     } catch (error) {
+      console.error("Ошибка при принятии консультации:", error);
       toast.error("Ошибка при принятии консультации.");
     }
   };
@@ -153,17 +140,13 @@ const DoctorConsultations: React.FC = () => {
     setNewConsultation(null);
 
     try {
-      await axios.post(
-        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/reject/`,
-        {},
-        { headers: { Authorization: `Token ${token}` } }
-      );
-
+      await api.post(`/consultations/${consultationId}/reject/`, {});
       toast.info("Консультация отклонена.");
       setConsultations((prev) => prev.filter((c) => c.id !== consultationId));
       seenConsultationIds.current.delete(consultationId);
       setTimeout(fetchConsultations, 3000);
     } catch (error) {
+      console.error("Ошибка при отклонении консультации:", error);
       toast.error("Ошибка при отклонении консультации.");
     }
   };
@@ -185,8 +168,7 @@ const DoctorConsultations: React.FC = () => {
             </p>
             <p className="text-gray-600">📧 {newConsultation.patient_email}</p>
             <p className="text-gray-600 mt-2">
-              📅 Статус:{" "}
-              <strong>{statusTranslations[newConsultation.status]}</strong>
+              📅 Статус: <strong>{statusTranslations[newConsultation.status]}</strong>
             </p>
 
             <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">

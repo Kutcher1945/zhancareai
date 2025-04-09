@@ -1,0 +1,31 @@
+// utils/api.ts
+import axios from 'axios';
+// export const PORT = import.meta.env.VITE_PORT; // test
+// export const baseURL = import.meta.env.VITE_BASE_URL; // test
+const PORT = '8000'; // test
+export const baseURL = 'http://localhost'; // test
+// const PORT = ''; // main
+// export const baseURL = 'https://api.csti.kz'; // main
+export const baseURLImg = 'https://api.csti.kz'; // main
+// const PORT_main = '8888';10.1.3.30:8181
+const axiosInstance = axios.create({
+  baseURL: `${baseURL}:${PORT}/api/v1`,
+  // headers: { 'Content-Type': 'application/json' },
+  paramsSerializer: (params: any) => new URLSearchParams(params).toString(),
+});
+
+axiosInstance.interceptors.request.use(
+  (config: any) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: any) => {
+    return Promise.reject(error);
+  }
+);
+
+
+export const api = axiosInstance;

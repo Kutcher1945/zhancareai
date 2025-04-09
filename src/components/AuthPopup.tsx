@@ -1,15 +1,16 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext"; 
+import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useState } from "react";
 import Image from "next/image";
 import Logo from "@/assets/logoLogin.png";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "react-toastify";  // ✅ Import Toastify
-import "react-toastify/dist/ReactToastify.css";  // ✅ Import Toast styles
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import ru from "@/locales/ru.json";
 import kz from "@/locales/kz.json";
+import { api } from "@/utils/api"; // ✅ Используем api instance
 
 const AuthPopup = () => {
   const { isAuthOpen, setIsAuthOpen, loginUser } = useAuth();
@@ -29,61 +30,58 @@ const AuthPopup = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    
-    const apiUrl = activeTab === "login"
-      ? "https://zhancareai-back.vercel.app/api/v1/auth/login/"
-      : "https://zhancareai-back.vercel.app/api/v1/auth/register/";
-  
-    const payload = activeTab === "login"
-      ? { email: formData.email, password: formData.password }
-      : {
-          email: formData.email,
-          phone: formData.phone || null,
-          password: formData.password,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-        };
-  
+
+    const apiUrl =
+      activeTab === "login"
+        ? "/auth/login/"
+        : "/auth/register/";
+
+    const payload =
+      activeTab === "login"
+        ? { email: formData.email, password: formData.password }
+        : {
+            email: formData.email,
+            phone: formData.phone || null,
+            password: formData.password,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+          };
+
     try {
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-  
-      const data = await response.json();
-      console.log("🔍 Backend Response:", data);  // ✅ Log full response
-  
-      if (!response.ok) {
-        throw new Error(data.error || "Something went wrong");
-      }
-  
+      const response = await api.post(apiUrl, payload);
+
+      const data = response.data;
+      console.log("🔍 Backend Response:", data);
+
       if (activeTab === "login") {
         loginUser(data.token, data.user);
-        localStorage.setItem("token", data.token);  // ✅ Store token
+        localStorage.setItem("token", data.token);
         console.log("✅ Token Stored:", data.token);
         toast.success("Вы успешно вошли!");
       } else {
         toast.success("Регистрация прошла успешно!");
       }
-  
+
       setIsAuthOpen(false);
-    } catch (err) {
-      setError(err.message);
-      toast.error(`❌ Ошибка: ${err.message}`);
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.error ||
+        err?.message ||
+        "Произошла ошибка. Попробуйте снова.";
+      setError(errorMessage);
+      toast.error(`❌ Ошибка: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
-  
 
   if (!isAuthOpen) return null;
 
@@ -91,7 +89,7 @@ const AuthPopup = () => {
     <AnimatePresence>
       {isAuthOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 px-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -109,6 +107,10 @@ const AuthPopup = () => {
             <div className="flex flex-col md:flex-row p-4 md:p-8 gap-6 md:gap-8 items-center">
               {/* Text Section */}
               <div className="text-center md:text-left w-full md:w-1/2">
+                {/* ✅ Добавляем логотип */}
+                <div className="flex justify-center md:justify-start mb-4">
+                  <Image src={Logo} alt="Logo" width={100} height={100} />
+                </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
                   {translations.welcome}
                 </h2>
@@ -121,14 +123,22 @@ const AuthPopup = () => {
               <div className="w-full md:w-1/2">
                 {/* Tabs */}
                 <div className="flex border-b mb-4 w-full">
-                  <button 
-                    className={`flex-1 text-center py-2 font-medium ${activeTab === "login" ? "border-b-2 border-black text-black" : "text-gray-500 hover:text-black"}`} 
+                  <button
+                    className={`flex-1 text-center py-2 font-medium ${
+                      activeTab === "login"
+                        ? "border-b-2 border-black text-black"
+                        : "text-gray-500 hover:text-black"
+                    }`}
                     onClick={() => setActiveTab("login")}
                   >
                     {translations.login}
                   </button>
-                  <button 
-                    className={`flex-1 text-center py-2 font-medium ${activeTab === "register" ? "border-b-2 text-black border-black" : "text-gray-500 hover:text-black"}`} 
+                  <button
+                    className={`flex-1 text-center py-2 font-medium ${
+                      activeTab === "register"
+                        ? "border-b-2 text-black border-black"
+                        : "text-gray-500 hover:text-black"
+                    }`}
                     onClick={() => setActiveTab("register")}
                   >
                     {translations.register}
@@ -148,6 +158,7 @@ const AuthPopup = () => {
                         onChange={handleChange}
                         className="w-full px-4 py-3 md:py-4 rounded-lg mb-3 bg-gray-100 focus:outline-none border border-gray-300"
                         required
+                        autoComplete="email"
                       />
                       <input
                         name="password"
@@ -157,6 +168,7 @@ const AuthPopup = () => {
                         onChange={handleChange}
                         className="w-full px-4 py-3 md:py-4 rounded-lg mb-3 bg-gray-100 focus:outline-none border border-gray-300"
                         required
+                        autoComplete="current-password"
                       />
                       <div className="text-right text-sm mb-4">
                         <a href="#" className="text-gray-500 hover:underline">
@@ -199,6 +211,7 @@ const AuthPopup = () => {
                         onChange={handleChange}
                         className="w-full px-4 py-3 md:py-4 rounded-lg mb-3 bg-gray-100 focus:outline-none border border-gray-300"
                         required
+                        autoComplete="email"
                       />
                       <input
                         name="phone"
@@ -216,6 +229,7 @@ const AuthPopup = () => {
                         onChange={handleChange}
                         className="w-full px-4 py-3 md:py-4 rounded-lg mb-3 bg-gray-100 focus:outline-none border border-gray-300"
                         required
+                        autoComplete="new-password"
                       />
                       <input
                         name="confirmPassword"

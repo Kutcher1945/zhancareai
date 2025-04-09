@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { api } from "@/utils/api"; // ✅ Используем централизованный API instance
 
 const VideoConsultation: React.FC = () => {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const router = useRouter();
   const [meetingId, setMeetingId] = useState<string | null>(null);
   const [doctor, setDoctor] = useState<{ id: number; name: string; email: string } | null>(null);
@@ -36,9 +36,7 @@ const VideoConsultation: React.FC = () => {
         return;
       }
 
-      const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/auth/doctor/available/", {
-        headers: { Authorization: `Token ${token}` },
-      });
+      const response = await api.get("/auth/doctor/available/");
 
       if (response.status === 200) {
         setDoctors(response.data.doctors || []);
@@ -57,11 +55,11 @@ const VideoConsultation: React.FC = () => {
       setError("⚠️ Пожалуйста, выберите врача перед началом звонка.");
       return;
     }
-  
+
     setError(null);
     setLoading(true);
     setWaitingForDoctor(true);
-  
+
     try {
       if (!token) {
         setError("🚫 Вы не авторизованы! Пожалуйста, войдите в систему.");
@@ -69,17 +67,13 @@ const VideoConsultation: React.FC = () => {
         setWaitingForDoctor(false);
         return;
       }
-  
+
       console.log("📤 Sending request to start consultation:", { doctor_id: selectedDoctorId });
-  
-      const response = await axios.post(
-        "https://zhancareai-back.vercel.app/api/v1/consultations/start/",
-        { doctor_id: selectedDoctorId },
-        { headers: { Authorization: `Token ${token}` } }
-      );
-  
+
+      const response = await api.post("/consultations/start/", { doctor_id: selectedDoctorId });
+
       console.log("✅ Consultation started:", response.data);
-  
+
       if (response.status === 200 && response.data) {
         setDoctor(response.data.doctor);
         setMeetingId(response.data.meeting_id);
@@ -90,42 +84,36 @@ const VideoConsultation: React.FC = () => {
       }
     } catch (error: any) {
       console.error("❌ Ошибка начала консультации:", error);
-  
+
       if (error.response) {
         console.error("📥 API Response Error:", error.response.data);
         setError(error.response.data.error || "⚠️ Ошибка при запуске звонка. Попробуйте позже.");
       } else {
         setError("⚠️ Ошибка сети. Проверьте соединение.");
       }
-  
+
       setWaitingForDoctor(false);
     }
-  
+
     setLoading(false);
   };
-  
-  
 
   // 🔹 Ожидание подтверждения врача
   const pollForDoctorAcceptance = () => {
     const interval = setInterval(async () => {
       try {
-        const response = await axios.get(
-          `https://zhancareai-back.vercel.app/api/v1/consultations/status/?meeting_id=${meetingId}`,
-          { headers: { Authorization: `Token ${token}` } }
-        );
-  
+        const response = await api.get(`/consultations/status/?meeting_id=${meetingId}`);
+
         if (response.status === 200) {
           const { status } = response.data;
-          
+
           if (status === "ongoing") {
             toast.success("Доктор принял звонок! Подключаемся...");
             setWaitingForDoctor(false);
             clearInterval(interval);
             router.push(`/video-call?meetingId=${meetingId}`);
-          } 
-          
-          // ✅ Stop polling if the call is rejected
+          }
+
           if (status === "cancelled") {
             toast.error("Доктор отклонил запрос. Попробуйте другого специалиста.");
             setMeetingId(null);
@@ -137,9 +125,9 @@ const VideoConsultation: React.FC = () => {
         console.error("Ошибка проверки статуса консультации:", error);
       }
     }, 3000);
-  
+
     return () => clearInterval(interval);
-  };  
+  };
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">

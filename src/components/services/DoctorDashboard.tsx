@@ -1,11 +1,12 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-toastify";
+import { api } from "@/utils/api"; // ✅ Используем api instance
 
 const DoctorDashboard: React.FC = () => {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const [consultations, setConsultations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,13 +20,10 @@ const DoctorDashboard: React.FC = () => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("https://zhancareai-back.vercel.app/api/v1/consultations/", {
-        headers: { Authorization: `Token ${token}` },
-      });
-
+      const response = await api.get("/consultations/");
       setConsultations(response.data);
     } catch (error) {
+      console.error("Ошибка загрузки консультаций:", error);
       setError("Ошибка загрузки консультаций.");
     }
 
@@ -34,32 +32,22 @@ const DoctorDashboard: React.FC = () => {
 
   const handleAccept = async (consultationId: number) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/accept/`,
-        {},
-        { headers: { Authorization: `Token ${token}` } }
-      );
-
+      await api.post(`/consultations/${consultationId}/accept/`, {});
       toast.success("Консультация принята! Начинаем звонок...");
       fetchConsultations();
     } catch (error) {
+      console.error("Ошибка при принятии консультации:", error);
       toast.error("Ошибка при принятии консультации.");
     }
   };
 
   const handleReject = async (consultationId: number) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `https://zhancareai-back.vercel.app/api/v1/consultations/${consultationId}/reject/`,
-        {},
-        { headers: { Authorization: `Token ${token}` } }
-      );
-
+      await api.post(`/consultations/${consultationId}/reject/`, {});
       toast.info("Консультация отклонена.");
       fetchConsultations();
     } catch (error) {
+      console.error("Ошибка при отклонении консультации:", error);
       toast.error("Ошибка при отклонении консультации.");
     }
   };
@@ -74,9 +62,21 @@ const DoctorDashboard: React.FC = () => {
       <ul>
         {consultations.map((consultation) => (
           <li key={consultation.id} className="mt-4 p-4 border rounded-lg">
-            <p>Пациент: {consultation.patient.name} ({consultation.patient.email})</p>
-            <button onClick={() => handleAccept(consultation.id)} className="bg-green-500 px-4 py-2 rounded-lg text-white">Принять</button>
-            <button onClick={() => handleReject(consultation.id)} className="bg-red-500 px-4 py-2 ml-2 rounded-lg text-white">Отклонить</button>
+            <p>
+              Пациент: {consultation.patient.name} ({consultation.patient.email})
+            </p>
+            <button
+              onClick={() => handleAccept(consultation.id)}
+              className="bg-green-500 px-4 py-2 rounded-lg text-white mt-2"
+            >
+              ✅ Принять
+            </button>
+            <button
+              onClick={() => handleReject(consultation.id)}
+              className="bg-red-500 px-4 py-2 ml-2 rounded-lg text-white mt-2"
+            >
+              ❌ Отклонить
+            </button>
           </li>
         ))}
       </ul>
